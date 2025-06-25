@@ -16,11 +16,11 @@ import datetime
 import time
 import math
 
-sys.path.append("Tools")
+sys.path.append("../src")
 # Custom Imports #
-import Notes
-import cdfx_09 as cdfx
-import mpitools
+from dolfinxtools import Notes
+from dolfinxtools import cdfx_09 as cdfx
+from dolfinxtools import mpitools
 
 class TestRunner():
     tests = []
