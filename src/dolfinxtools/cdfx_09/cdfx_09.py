@@ -97,7 +97,7 @@ class SubDomain:
         markedArray = mesh.locate_entities(matProp._domain, matProp._dim, self.inside)
         matProp.x.array[markedArray] = np.full(len(markedArray), value) 
 
-    def mark(self, facetFunction, value:typing.Union[int, float]):
+    def mark(self, facetFunction, value:typing.Union[int, float]) -> None:
         """
             Given a facetFunction, mark appropriate facets with value as determined by SubDomain.inside()
             Args:
@@ -240,10 +240,17 @@ class FacetFunction:
         self._indices.append(markedArray)
         self._markers[markedArray] = value   
 
-    ## FacetFunction.CreateMeshTag()
-    # Call this after using SubDomain.mark() to generate a dolfinx.mesh.meshtags object
-    def CreateMeshTag(self):
-        return mesh.meshtags(self._domain, self._fdim, np.arange(self._numEntities, dtype=np.int32), self._markers)
+    def CreateMeshTag(self, name:str="meshtags") -> mesh.MeshTags:
+        """
+            Create a mesh tag from the current function
+            Args:
+                name : Optionally specify the mesh tag name (meshtags)
+            Returns:
+                out : The mesh.MeshTags object
+        """
+        out = mesh.meshtags(self._domain, self._fdim, np.arange(self._numEntities, dtype=np.int32), self._markers)
+        out.name = name
+        return out
 
 class BoxTree(object):
     """
@@ -310,7 +317,14 @@ class FunctionX(fem.Function):
         super().__init__(fs)
         self._fs = fs
 
-    def interp(self, expressIn, fs:fem.FunctionSpace = None):
+    @property
+    def data(self):
+        """
+            Shorthand for fem.Function._cpp_object
+        """
+        return self._cpp_object
+
+    def interp(self, expressIn, fs:fem.FunctionSpace = None) -> None:
         """
             Interpolate a ufl.form onto the function
             Args:
@@ -354,14 +368,14 @@ def RotationMatrix(angle:float, axis:np.ndarray) -> np.ndarray:
                      [r21, r22, r23],
                      [r31, r32, r33]])
 
-def VoigtRotation(angle:float, axis:np.array) -> np.array:
+def VoigtRotation(angle:float, axis:np.array) -> np.ndarray:
     """
         Return the Voigt rotation matrix for transforming a compliance or stiffness matrix
         https://scicomp.stackexchange.com/questions/35600/4th-order-tensor-rotation-sources-to-refer
         Args:
             angle : The rotation matrix in degrees
             axis : The axis to rotate 
-        Returns
+        Returns:
             A 6x6 array for rotating the 6x6 voigt sensor
     """
     rotMat = RotationMatrix(angle, axis)
@@ -428,7 +442,7 @@ def MapSubspace(fs:fem.FunctionSpace):
 
 
 def transfer_submesh_data(u_parent: fem.Function, u_sub: fem.Function,
-                          sub_to_parent_cells: np.ndarray, inverse: bool = False):
+                          sub_to_parent_cells: np.ndarray, inverse: bool = False) -> None:
     """
     Transfer data between a function from the parent mesh and a function from the sub mesh.
     Both functions has to share the same element dof layout
@@ -463,6 +477,38 @@ def transfer_submesh_data(u_parent: fem.Function, u_sub: fem.Function,
                 for j in range(bs):
                     u_sub.x.array[s_dof * bs + j] = u_parent.x.array[p_dof * bs + j]
 
+def ComputeEntities(domain:mesh.Mesh, dim:int) -> int:
+    """
+        Return the total number of entities including ghosts
+        Args:
+            domain: The Dolfinx mesh
+            dim: The topology dim
+        Returns:
+            out: The total count
+    """
+    indexMap = domain.topology.index_map(dim)
+    return indexMap.size_local + indexMap.num_ghosts
 
+def Create_pcw_field(domain: mesh.Mesh, cell_markers:mesh.MeshTags, property_dict:dict, name:typing.Optional[str] = None, default_value:typing.Optional[typing.Union[int, float]] = 0) -> fem.Function:
+    """
+    Create a piecewise constant field with different values per subdomain.
+    Adapted from https://bleyerj.github.io/comet-fenicsx/tours/interfaces/intrinsic_czm/intrinsic_czm.html
+    Args:
+        domain: Mesh
+        cell_markers: Meshtags of topology
+        property_dict: A dictionary mapping region tags to physical values
+        name: Function name (optional)
+        default_value: Default value for function (optional)
+
+    Returns:
+        k: A DG-0 function existing on domain
+    """
+    V0 = fem.functionspace(domain, ("DG", 0))
+    k = fem.Function(V0, name=name)
+    k.x.array[:] = default_value
+    for tag, value in property_dict.items():
+        cells = cell_markers.find(tag)
+        k.x.array[cells] = np.full_like(cells, value, dtype=np.float64)
+    return k
 
 ## End SCRIPT ##

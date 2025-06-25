@@ -95,8 +95,8 @@ class PrebuiltPlot():
         for axisI in axisN:
             self.convertN(axisI).grid(which = whichIn)
             
-    def save(self, savePath:str, **kwargs):
-        self._fig.savefig(savePath, **kwargs)
+    def save(self, savePath:str, bbox_inches = "tight", **kwargs):
+        self._fig.savefig(savePath, bbox_inches = bbox_inches, **kwargs)
 
     def title(self, strIn, fontIn = None):
         if (fontIn == None): fontIn = self._font
@@ -107,13 +107,16 @@ class PrebuiltPlot():
         waitIt = input("Press enter to continue:.....")
         
 
-
-    ## PrebuiltPlot.convertN()
-    # Return the zero-based nxn or nx1 or 1xn axis i.e.
-    # 2x2 => [0 2]
-    #        [1 3]
-    # - N: The zero-based index of the axis
-    def convertN(self, N):
+    def ConvertN(self, N) -> matplotlib.pyplot.subplot:
+        """
+            Get the zero based nxn or nx1 or 1xn axis.
+            2x2 => [0 2][1 3]
+                
+            Args:
+                N: The zero-based index of the axis
+            Returns:
+                out: The matplotlib.pyplot.subplot axis handle
+        """
         floorC = math.floor(N / self._row)
         floorR = (N - floorC * self._row)
         if (self._row == 1 or self._col== 1):

@@ -7,10 +7,9 @@ import sys
 import os
 from mpi4py import MPI
 
-
-sys.path.append("./Tests")
+sys.path.append("../src")
 from TestModules import *
-import mpitools
+from dolfinxtools import mpitools
 
 commWorld = MPI.COMM_WORLD
 numCore = commWorld.Get_size() 

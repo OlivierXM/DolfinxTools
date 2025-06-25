@@ -8,7 +8,7 @@ class Notes(object):
         """
         self.messages = []
 
-    def addNotes(self, newMessage:str):
+    def addNotes(self, newMessage:str) -> None:
         """
             Add a new note to the list
             Args:
@@ -16,7 +16,7 @@ class Notes(object):
         """
         self.messages.append(newMessage)
 
-    def printNotes(self):
+    def printNotes(self) -> None:
         """
             Print notes directly to stdout
         """
