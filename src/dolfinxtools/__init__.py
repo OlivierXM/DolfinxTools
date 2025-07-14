@@ -11,5 +11,6 @@ __all__ = [
     "cdfx_09",
     "CustomPlot",
     "mpitools",
-    "Notes"
+    "Notes",
+    "Mechanics"
 ]

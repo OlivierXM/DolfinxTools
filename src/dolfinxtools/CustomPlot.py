@@ -55,45 +55,45 @@ class PrebuiltPlot():
                 labelIn : Legend label to assign
                 lwIn : Line width to use
         """
-        self.convertN(axisN).plot(datax, datay, styleIn, label = labelIn, lw = lwIn)
+        self.ConvertN(axisN).plot(datax, datay, styleIn, label = labelIn, lw = lwIn)
 
     def xlabel(self, axisN, strIn, fontIn = None):
         if (fontIn == None): fontIn = self._font
 
         if (axisN < 0):
             for i in range(self._size):
-                self.convertN(i).set_xlabel(strIn, fontproperties = fontIn)
+                self.ConvertN(i).set_xlabel(strIn, fontproperties = fontIn)
         else:
-            self.convertN(axisN).set_xlabel(strIn, fontproperties = fontIn)
+            self.ConvertN(axisN).set_xlabel(strIn, fontproperties = fontIn)
    
     def ylabel(self, axisN, strIn, fontIn = None):
         if (fontIn == None): fontIn = self._font
             
         if (axisN < 0):
             for i in range(self._size):
-                self.convertN(i).set_ylabel(strIn, fontproperties = fontIn)
+                self.ConvertN(i).set_ylabel(strIn, fontproperties = fontIn)
         else:
-            self.convertN(axisN).set_ylabel(strIn, fontproperties = fontIn)
+            self.ConvertN(axisN).set_ylabel(strIn, fontproperties = fontIn)
 
     def legend(self, axisN, locIn = 'lower center', fontIn = None, **kwargs):
         if not(isinstance(axisN, list)): axisN = [axisN]
         if (fontIn == None): fontIn = self._font
         for axisI in axisN:
-            self.convertN(axisI).legend(loc = locIn, prop = fontIn, **kwargs)
+            self.ConvertN(axisI).legend(loc = locIn, prop = fontIn, **kwargs)
 
     def axis(self, axisN, xl=None, xu=None, yl=None, yu=None):
         if (axisN < 0):
             for i in range(self._size):
-                self.convertN(i).set(xlim=(xl, xu), ylim=(yl, yu))
+                self.ConvertN(i).set(xlim=(xl, xu), ylim=(yl, yu))
         else:
-            self.convertN(axisN).set(xlim=(xl, xu), ylim=(yl, yu))
+            self.ConvertN(axisN).set(xlim=(xl, xu), ylim=(yl, yu))
 
     def grid(self, axisN, whichIn = 'major'):
         if not(isinstance(axisN, list)):
             axisN = [axisN]
 
         for axisI in axisN:
-            self.convertN(axisI).grid(which = whichIn)
+            self.ConvertN(axisI).grid(which = whichIn)
             
     def save(self, savePath:str, bbox_inches = "tight", **kwargs):
         self._fig.savefig(savePath, bbox_inches = bbox_inches, **kwargs)
@@ -107,7 +107,7 @@ class PrebuiltPlot():
         waitIt = input("Press enter to continue:.....")
         
 
-    def ConvertN(self, N) -> matplotlib.pyplot.subplot:
+    def ConvertN(self, N) -> plt.subplot:
         """
             Get the zero based nxn or nx1 or 1xn axis.
             2x2 => [0 2][1 3]

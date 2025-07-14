@@ -334,6 +334,7 @@ class FunctionX(fem.Function):
         if (fs == None):
             fs = self._fs
         self.interpolate(fem.Expression(expressIn, fs.element.interpolation_points()))
+        self.x.scatter_forward()
 
 def RotationMatrix(angle:float, axis:np.ndarray) -> np.ndarray:
     """
@@ -510,5 +511,38 @@ def Create_pcw_field(domain: mesh.Mesh, cell_markers:mesh.MeshTags, property_dic
         cells = cell_markers.find(tag)
         k.x.array[cells] = np.full_like(cells, value, dtype=np.float64)
     return k
+
+def project(function, space:fem.FunctionSpace, dz:ufl.Measure, petscOpt = None) ->fem.Function:
+    """
+        Project an expression onto another space
+        Args:
+            function: The function to project
+            space: The target function space
+            dz: The ufl measure object
+        Return:
+            out: The projected solution
+    """
+    p = ufl.TrialFunction(space)
+    q = ufl.TestFunction(space)
+    a = ufl.inner(p, q) * dz
+    L = ufl.inner(function, q) * dz
+
+    if (petscOpt == None):
+        problem = fem.petsc.LinearProblem(a, L, bcs = [])
+    else:
+        problem = fem.petsc.LinearProblem(a, L, bcs = [], petsc_options = petscOpt)
+    return problem.solve()
+
+def Assemble_Scalar(comm:MPI.Intracomm, form_arg, op:MPI.Op = MPI.SUM) -> float:
+    """
+        Return the assembled scalar for the form args
+        Args:
+            comm : The MPI communicator to use
+            form_arg : The form args to assemble
+            op : The MPI operation to execute
+        Returns:
+            out : The MPI assembled arg
+    """
+    return comm.allreduce(fem.assemble_scalar(fem.form(form_arg)), op = op)
 
 ## End SCRIPT ##
