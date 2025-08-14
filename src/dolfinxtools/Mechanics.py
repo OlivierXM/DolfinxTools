@@ -61,7 +61,7 @@ def SigmaVec(sigmaIn, tdim:int = None):
             out : The (3*n-3)x1 stress vector
     """
     if (tdim == None):
-        tdim  = sigmaIn.function_space.mesh.topology.dim
+        tdim = sigmaIn.function_space.mesh.topology.dim
 
     if (tdim == 2):
         return SigmaVec2(sigmaIn)

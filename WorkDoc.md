@@ -10,3 +10,7 @@ Purpose: Document peroidic updates outside git commit tags
 ### 250714 - OlivierXM
 - Fixed minor bugs
 - Added common mechanics to [Mechanics](./src/dolfinxtools/Mechanics.py)
+
+## August 2025
+- Added utility to [cdfx_09](./src/dolfinxtools/cdfx_09/cdfx_09.py) and [Mechanics](./src/dolfinxtools/Mechanics.py)
+    - Can now rotate about three axis

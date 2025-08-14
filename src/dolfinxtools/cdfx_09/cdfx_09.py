@@ -8,6 +8,7 @@ similary to that of legacy FEniCS.
 """
 from dolfinx import fem
 from dolfinx import mesh
+from dolfinxtools import cdfx_09
 from mpi4py import MPI
 import petsc4py.PETSc as pets
 import numpy as np
@@ -271,7 +272,16 @@ class BoxTree(object):
         
     def __getitem__(self, item):
         return self._box[item[0], item[1]]
-    
+    @property 
+    def center(self) -> np.ndarray:
+        """
+            Get the center of the domain
+        """
+        x0 = self._box[0, 0] + 0.5 * self.length
+        y0 = self._box[1, 0] + 0.5 * self.width
+        z0 = self._box[2, 0] + 0.5 * self.height
+        return np.ndarray([x0, y0, z0], dtype=np.float64)
+
     @property
     def length(self):
         """
@@ -336,6 +346,22 @@ class FunctionX(fem.Function):
         self.interpolate(fem.Expression(expressIn, fs.element.interpolation_points()))
         self.x.scatter_forward()
 
+def Rotate(angX:float, angY:float, angZ:float) -> np.ndarray:
+    """
+        Return a rotate matrix that rotates in x, then y, then z
+        Args:
+            angX : Rotation angle about x [deg]
+            angY : Rotation angle about y [deg]
+            angZ : Rotation angle about z [deg]
+        Returns:
+            out : The 3x3 rotation matrix
+    """
+    _rotZ = cdfx_09.RotationMatrix(angZ, np.array([0, 0, 1]))
+    _rotY = cdfx_09.RotationMatrix(angY, np.array([0, 1, 0]))
+    _rotX = cdfx_09.RotationMatrix(angX, np.array([1, 0, 0]))
+    return np.matmul(_rotZ, np.matmul(_rotY, _rotX))
+
+
 def RotationMatrix(angle:float, axis:np.ndarray) -> np.ndarray:
     """
         Return the rotation matrix for rotating an object about a specific axis
@@ -369,17 +395,21 @@ def RotationMatrix(angle:float, axis:np.ndarray) -> np.ndarray:
                      [r21, r22, r23],
                      [r31, r32, r33]])
 
-def VoigtRotation(angle:float, axis:np.array) -> np.ndarray:
+def VoigtRotation(angle:float, axis:np.array, rotateAxis:bool = False) -> np.ndarray:
     """
         Return the Voigt rotation matrix for transforming a compliance or stiffness matrix
         https://scicomp.stackexchange.com/questions/35600/4th-order-tensor-rotation-sources-to-refer
         Args:
             angle : The rotation matrix in degrees
             axis : The axis to rotate 
+            rotateAxis : Whether to treat the axis as x,y,z angles to rotate a cartesian vector
         Returns:
-            A 6x6 array for rotating the 6x6 voigt sensor
+            A 6x6 array for rotating the 6x6 voigt tensor
     """
-    rotMat = RotationMatrix(angle, axis)
+    if (rotateAxis):
+        rotMat = Rotate(axis[0], axis[1], axis[2])
+    else:
+        rotMat = RotationMatrix(angle, axis)
     
     q11 = rotMat[0, 0] ** 2
     q21 = rotMat[1, 0] ** 2
