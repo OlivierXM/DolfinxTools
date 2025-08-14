@@ -5,7 +5,7 @@
 # SPDX-License-Identifier:    LGPL-3.0-or-later
 """CDFX module for dolfinx 0.9.0"""
 
-__version__ = "1.0.0"
+__version__ = "1.0.1"
 
 from dolfinxtools.cdfx_09.cdfx_09 import *
 
